@@ -1,0 +1,60 @@
+version: "3"
+
+networks:
+  majujaya:
+
+services:
+  app:
+    image: node:20-alpine
+    container_name: app-majujaya
+    restart: on-failure
+    volumes:
+      - ./app:/var/www/html
+    working_dir: /var/www/html
+    depends_on:
+      - adminer
+      - mariadb
+    ports:
+      - 1001:3000
+    command: ["sh", "-c", "npm run dev"]
+    networks:
+      - majujaya
+
+  node:
+    image: node:20-alpine
+    container_name: npm-majujaya
+    volumes:
+      - ./app:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - majujaya
+
+  mariadb:
+    image: mariadb:11.1.3
+    container_name: mariadb-majujaya
+    tty: true
+    restart: on-failure
+    ports:
+      - 1002:3306
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    environment:
+      MARIADB_DATABASE: majujaya
+      MARIADB_USER: root
+      MARIADB_PASSWORD: buyung
+      MARIADB_ROOT_PASSWORD: buyung
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mariadb
+    networks:
+      - majujaya
+
+  adminer:
+    build:
+      context: .
+      dockerfile: adminer.dockerfile
+    container_name: adminer-majujaya
+    restart: on-failure
+    ports:
+      - 1003:8080
+    networks:
+      - majujaya
